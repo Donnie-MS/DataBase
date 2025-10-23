@@ -16,3 +16,16 @@ CREATE TABLE PersonInCharge (
 );
 
 SELECT * FROM Award;
+SELECT * FROM PersonInCharge
+
+CREATE TABLE LineaEstrategica (
+	LineaEstrategicaId INT,
+    LineaEstrategica CHAR(40)
+);
+
+DROP TABLE LineaEstrategica;
+
+ALTER TABLE PersonInCharge CHANGE `name` fullName VARCHAR(100) NOT NULL;
+ALTER TABLE PersonIncharge ADD COLUMN address VARCHAR(100) NOT NULL;
+
+CREATE TABLE Person(personId INT, typeOfDocument CHAR(03) PRIMARY KEY, DNI INT, `name` VARCHAR(100), EDAD INT DEFAULT(18));
