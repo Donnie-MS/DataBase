@@ -1,0 +1,12 @@
+USE multiTableOne;
+
+CREATE TABLE WAREHOUSE(
+	`number` INT PRIMARY KEY AUTO_INCREMENT,
+    personInCharge VARCHAR(20) NOT NULL
+);
+
+CREATE TABLE article(
+	articleID INT PRIMARY KEY AUTO_INCREMENT,
+    `description` VARCHAR(30) NOT NULL,
+    price INT NOT NULL
+);
