@@ -26,3 +26,12 @@ CREATE TABLE Seller(
     dni INT(15) NOT NULl,
     ciudad VARCHAR(20)
 );
+
+CREATE TABLE SALE(
+	invoiceNumber INT PRIMARY KEY AUTO_INCREMENT,
+	clientID_FK INT NOT NULL,
+    `date` DATE NOT NULL,
+    sellerID_FK INT NOT NULL,
+    FOREIGN KEY (sellerID_FK) REFERENCES Seller(sellerID),
+    FOREIGN KEY (clientID_FK) REFERENCES Client(clientID)
+);
