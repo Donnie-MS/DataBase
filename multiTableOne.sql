@@ -105,3 +105,12 @@ JOIN City c ON c.cityID = s.cityID_FK;
 FROM City c
 JOIN Supplier s ON s.cityID_FK = c.cityID;
 */
+
+SELECT s.`name` AS Supplier, c.`name` AS City
+FROM Supplier s
+JOIN City c ON c.cityID = s.cityID_FK
+WHERE c.`name` LIKE '%LA PLATA%';
+
+SELECT c.`number_FK` AS Contain FROM Contain c
+JOIN Article a ON a.articleID = c.articleID_FK
+WHERE a.`description` LIKE 'P%';
