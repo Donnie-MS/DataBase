@@ -114,3 +114,43 @@ WHERE c.`name` LIKE '%LA PLATA%';
 SELECT c.`number_FK` AS Contain FROM Contain c
 JOIN Article a ON a.articleID = c.articleID_FK
 WHERE a.`description` LIKE 'P%';
+
+/*
+#4) Listar los números de almacenes y su responsable que almacenan el
+artículo de descripción que empiece con P 
+*/
+
+SELECT DISTINCT
+	w.`number` AS WarehouseNumber,
+	w.personInCharge AS Responsible 
+FROM Warehouse w
+JOIN Contain c ON c.`number_FK` = w.`number`
+JOIN Article a ON a.articleID = c.articleID_FK
+WHERE a.`description` Like 'P%';
+
+/*
+#5) Listar los materiales (código y descripción) provistos por proveedores
+de la ciudad de Ramos Mejía 
+*/
+
+SELECT m.materialID, m.`description` FROM  Material m
+JOIN ProvidedBy p ON p.materialID_FK = m.materialID
+JOIN Supplier s ON p.supplierID_FK = s.supplierID
+JOIN City c ON c.cityID = s.cityID_FK
+WHERE c.`name` LIKE '%RAMOS MEJIA%';
+
+
+/*
+#6) Listar los nombres de los proveedores que proveen materiales para
+artículos ubicados en almacenes que Roberto tiene a su cargo
+*/
+
+SELECT DISTINCT s.`name` FROM Supplier s
+JOIN ProvidedBy p ON p.supplierID_FK = s.supplierID
+JOIN ComposedOf com ON com.materialID_FK = p.materialID_FK
+JOIN Contain con ON con.articleID_FK = com.articleID_FK
+JOIN Warehouse w ON w.`number` = con.number_FK
+WHERE w.personInCharge LIKE 'Roberto'
+ORDER BY s.name;
+
+
