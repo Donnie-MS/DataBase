@@ -66,4 +66,26 @@ VALUES ('Bread', 130.70),
 ('Cheese Cake', 450.74),
 ('Pasta Frola', 278.50);
 
-INSERT INTO 
+INSERT INTO Material (`Description`)
+VALUES ('Oil'),
+('Fluor'),
+('yeast'),
+('EGG'),
+('Sugar'),
+('Salt'),
+('Water');
+
+INSERT INTO City(`Name`) 
+VALUES ('La plata'),
+('Capital federal'),
+('Ramos Mejia'),
+('La Matanza');
+
+INSERT INTO Supplier (`Name`, Address, CityID_FK)
+VALUES ('Arcor', 'Ayacucho 1234', 1),
+('Molinos', 'Yatay 465', 4),
+('Ledesma', 'Mario BRAVO 987', 1),
+('Marolio', 'Potosi 098', 2),
+('Glaciar', 'Sarmiento 555', 3),
+('Johnson', 'Potosi 123', 1);
+
