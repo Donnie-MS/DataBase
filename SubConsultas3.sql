@@ -195,4 +195,59 @@ WHERE A.Price >= 300;
 */
 
 SELECT A.description FROM Article A
-WHERE A.Price = (SELECT MAX(A.PRICE) FROM Article A)
+WHERE A.Price = (SELECT MAX(A.PRICE) FROM Article A);
+
+/*
+#1) Listar los nombres de aquellos proveedores que no proveen
+ningún material.
+*/
+SELECT S.Name FROM Supplier S
+WHERE NOT EXISTS (
+	Select 1 FROM ProvidedBy P
+    WHERE P.SupplierID_FK = S.SupplierID
+);
+
+/*
+2) Listar los códigos y descripción de los materiales que provea
+el proveedor 2 y no los provea el proveedor 5
+*/
+
+SELECT M.MaterialID, M.Description 
+FROM Material M 
+JOIN ProvidedBy P ON M.MaterialID = P.MaterialID_FK
+WHERE P.SupplierID_FK = 2 
+  AND M.MaterialID NOT IN (
+        SELECT P.MaterialID_FK
+        FROM ProvidedBy P
+        WHERE P.SupplierID_FK = 5
+  );
+  
+/*
+  #3) Listar número y nombre de almacenes que contienen los
+artículos de descripción ‘Pan’ y los de descripción ‘Facturas’
+(ambos).
+  */
+  
+
+/*
+CONSULTAS 
+#1) Listar nombre de todos los proveedores y de su ciudad  
+*/
+
+SELECT S.Name, C.Name FROM Supplier S
+JOIN City C ON S.CityID_FK = C.CityID;
+
+SELECT S.Name, C.Name From Supplier S, City C
+WHERE S.CityID_FK = C.CityID;
+
+/*
+#2)Listar los nombres de los proveedores de la ciudad de La Plata  
+#3) Listar los números de almacenes que almacenan el artículo de 
+descripción que empiece con P 
+#4) Listar los números de almacenes y su responsable que almacenan el 
+artículo de descripción que empiece con P 
+#5) Listar los materiales (código y descripción) provistos por proveedores 
+de la ciudad de Ramos Mejía 
+#6) Listar los nombres de los proveedores que proveen materiales para 
+artículos ubicados en almacenes que Roberto tiene a su cargo
+*/
