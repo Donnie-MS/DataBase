@@ -139,44 +139,83 @@ SELECT S.Name FROM Supplier AS S
 LEFT JOIN ProvidedBy AS P ON S.SupplierID = P.SupplierID_FK
 WHERE P.SupplierID_FK IS NULL;
 */
+
+/*
+#1) Listar los nombres de aquellos proveedores que no proveen
+ningún material.
+*/
+SELECT S.Name FROM Supplier S
+WHERE NOT EXISTS(
+	SELECT 1 FROM ProvidedBy P
+    WHERE S.SupplierID = P.SupplierID_FK
+);
+
+SELECT S.Name FROM Supplier S
+WHERE S.SupplierID NOT IN (
+	SELECT P.SupplierID_FK FROM ProvidedBy P
+);
 /*
 #2) Listar los códigos y descripción de los materiales que provea
 el proveedor 2 y no los provea el proveedor 5
 */
-
-SELECT M.MaterialID, M.Description 
-FROM Material M
-WHERE EXISTS
-(SELECT 1
-FROM ProvidedBy P
-WHERE P.SupplierID_FK = 2 AND P.MaterialID_FK = M.MaterialID
-) AND NOT EXISTS (
-	SELECT 1 FROM ProvidedBy P
-    WHERE P.SupplierID_FK = 5 AND P.MaterialID_FK = M.MaterialID
+SELECT M.MaterialID, M.Description FROM Material M
+JOIN ProvidedBy P ON M.MaterialID = P.MaterialID_FK
+WHERE P.SupplierID_FK = 2 AND M.MaterialID NOT IN(
+	SELECT P.MaterialID_FK FROM ProvidedBy P
+    WHERE P.SupplierID_FK = 5
 );
+
+SELECT M.MaterialID, M.Description FROM Material M
+JOIN ProvidedBy P ON M.MaterialID = P.MaterialID_FK
+WHERE P.SupplierID_FK = 2 AND NOT EXISTS(
+	SELECT 1 
+    FROM ProvidedBy P
+    WHERE P.MaterialID_Fk = M.MaterialID
+    AND P.SupplierID_FK = 5
+    /*se INICIALIZA OTRO PROVIDED PARA QUE NO MODIFIQUES EL DE AFUERAr*/
+);
+
 /*
 #3) Listar número y nombre de almacenes que contienen los
 artículos de descripción ‘Pan’ y los de descripción ‘Facturas’
-(ambos).
+(ambos)
 */
 
 SELECT W.Number, W.Name FROM Warehouse W
-WHERE W.Number IN (
-	SELECT Con.Number_FK FROM Article A JOIN Contains Con ON Con.ArticleID_FK = A.ArticleID
-    WHERE A.description LIKE "%Bread%"
-) AND W.Number IN (
-	SELECT Con.Number_FK FROM Article A JOIN Contains Con ON Con.ArticleID_FK = A.ArticleID
-    WHERE A.description Like "%Pastries%"
+WHERE EXISTS (
+	SELECT 1 FROM Contains C
+    WHERE W.Number = C.Number_FK AND
+    EXISTS (
+		SELECT 1 FROM Article A
+        WHERE A.ArticleID = C.ArticleID_FK
+        AND A.Description LIKE 'Bread'
+    )
+)
+AND EXISTS(
+	SELECT 1 FROM Contains C
+    WHERE W.Number = C.Number_FK AND
+    EXISTS (
+		SELECT 1 FROM Article A
+        WHERE A.ArticleID = C.ArticleID_FK
+        AND A.Description LIKE 'Pastries'
+    )
 );
-   
-/*#4) Listar la descripción de artículos compuestos por todos los
-materiales*/
 
-SELECT A.ArticleID, A.description 
-FROM ComposedOf Com JOIN Article A 
-ON Com.ArticleID_Fk = A.ArticleID
-GROUP BY A.ArticleID, A.Description
-HAVING COUNT(*) = (SELECT COUNT(*) FROM MATERIAL);
+SELECT W.Number, W.Name FROM Warehouse W
+WHERE W.Number IN (
+	SELECT C.Number_FK FROM Contains C
+    JOIN Article A ON A.ArticleID = C.ArticleID_FK
+    WHERE A.Description LIKE 'Bread'
+)
+AND W.Number IN (
+	SELECT C.Number_FK FROM Contains C
+    JOIN Article A ON A.ArticleID = C.ArticleID_FK
+    WHERE A.Description LIKE 'Pastries'
+);
+/*
+#4) Listar la descripción de artículos compuestos por todos los
+materiales
+*/
 
 /*
 #5) Hallar los códigos y nombres de los proveedores que proveen
@@ -184,51 +223,9 @@ al menos un material que se usa en algún artículo cuyo precio es
 mayor a $300
 */
 
-SELECT DISTINCT S.SupplierID, S.Name FROM ProvidedBy Pro 
-JOIN Supplier S ON Pro.SupplierID_FK = S.SupplierID
-JOIN ComposedOf C ON C.MaterialID_FK = Pro.MaterialID_FK
-JOIN Article A ON C.ArticleID_Fk = A.ArticleID
-WHERE A.Price >= 300;
-
 /*
 #6) Listar la descripción de los artículos de mayor precio
 */
-
-SELECT A.description FROM Article A
-WHERE A.Price = (SELECT MAX(A.PRICE) FROM Article A);
-
-/*
-#1) Listar los nombres de aquellos proveedores que no proveen
-ningún material.
-*/
-SELECT S.Name FROM Supplier S
-WHERE NOT EXISTS (
-	Select 1 FROM ProvidedBy P
-    WHERE P.SupplierID_FK = S.SupplierID
-);
-
-/*
-2) Listar los códigos y descripción de los materiales que provea
-el proveedor 2 y no los provea el proveedor 5
-*/
-
-SELECT M.MaterialID, M.Description 
-FROM Material M 
-JOIN ProvidedBy P ON M.MaterialID = P.MaterialID_FK
-WHERE P.SupplierID_FK = 2 
-  AND M.MaterialID NOT IN (
-        SELECT P.MaterialID_FK
-        FROM ProvidedBy P
-        WHERE P.SupplierID_FK = 5
-  );
-  
-/*
-  #3) Listar número y nombre de almacenes que contienen los
-artículos de descripción ‘Pan’ y los de descripción ‘Facturas’
-(ambos).
-  */
-  
-
 /*
 CONSULTAS 
 #1) Listar nombre de todos los proveedores y de su ciudad  
@@ -242,12 +239,168 @@ WHERE S.CityID_FK = C.CityID;
 
 /*
 #2)Listar los nombres de los proveedores de la ciudad de La Plata  
+*/
+SELECT S.Name 
+FROM Supplier S 
+JOIN City C ON S.CityID_FK = C.CityID
+WHERE C.Name LIKE '%La Plata%';
+
+SELECT S.Name FROM Supplier S, City C
+WHERE S.CityID_FK = C.CityID AND C.Name LIKE '%La Plata%';
+
+SELECT S.Name FROM Supplier S
+WHERE EXISTS (
+	SELECT 1 FROM City C
+    WHERE C.CityID = S.CityID_FK
+    AND C.Name LIKE '%La plata%'
+);
+
+SELECT S.Name 
+FROM Supplier S
+WHERE S.CityID_FK IN (
+	SELECT C.CityID FROM City C
+    WHERE C.Name LIKE '%La Plata%'
+);
+/*
 #3) Listar los números de almacenes que almacenan el artículo de 
 descripción que empiece con P 
+*/
+
+SELECT C.Number_FK FROM Contains C
+JOIN Article A ON A.ArticleID = C.ArticleID_FK
+WHERE A.Description LIKE 'P%';
+
+SELECT C.Number_FK FROM Contains C, Article A
+WHERE A.ArticleID = C.ArticleID_FK AND A.Description LIKE 'P%';
+
+SELECT C.Number_FK FROM Contains C
+WHERE EXISTS(
+	SELECT 1 FROM Article A
+	WHERE A.ArticleID = C.ArticleID_FK
+    AND A.Description LIKE 'P%'
+);
+
+SELECT C.Number_FK FROM Contains C
+WHERE C.ArticleID_Fk IN (
+	SELECT A.ArticleID FROM Article A
+    WHERE A.Description LIKE 'P%'
+);
+
+/*
 #4) Listar los números de almacenes y su responsable que almacenan el 
 artículo de descripción que empiece con P 
+*/
+
+SELECT W.Number, W.PersonInCharge FROM Warehouse W
+JOIN Contains C ON W.Number = C.Number_FK
+JOIN Article A ON C.ArticleID_FK = A.ArticleID
+WHERE A.Description LIKE 'P%';
+
+SELECT W.Number, W.PersonInCharge FROM Warehouse W
+WHERE EXISTS(
+	SELECT 1 FROM Contains C
+    WHERE W.Number = C.Number_FK
+    AND EXISTS (
+		SELECT 1 FROM Article A 
+        WHERE A.ArticleID = C.ArticleID_FK
+        AND A.Description LIKE 'P%'
+    )
+) ;
+
+SELECT W.Number, W.PersonInCharge FROM Warehouse W
+WHERE W.Number IN (
+	SELECT C.Number_Fk FROM Contains C
+    WHERE C.ArticleID_FK IN(
+		SELECT A.ArticleID FROM Article A
+        WHERE A.Description LIKE 'P%'
+    )
+);
+/*
 #5) Listar los materiales (código y descripción) provistos por proveedores 
 de la ciudad de Ramos Mejía 
+*/
+
+SELECT M.MaterialID, M.Description 
+FROM Material M 
+JOIN ProvidedBy P ON M.MaterialID = P.MaterialID_FK
+JOIN Supplier S ON P.SupplierID_FK = S.SupplierID
+JOIN City C ON S.CityID_FK = C.CityID
+WHERE C.Name LIKE '%ramos mejia%';
+
+SELECT  M.MaterialID, M.Description 
+FROM Material M
+WHERE EXISTS(
+	SELECT 1 FROM ProvidedBy P
+    WHERE P.MaterialID_FK = M.MaterialID
+    AND
+    EXISTS(
+		SELECT 1 FROM Supplier S
+        WHERE S.SupplierID = P.SupplierID_FK
+        AND
+        EXISTS (
+			SELECT 1 FROM City C
+            WHERE C.CityID = S.CityID_FK
+            AND C.Name LIKE '%ramos mejia%'
+        )
+    )
+);
+
+SELECT M.MaterialID, M.Description FROM Material M
+WHERE M.MaterialID IN ( 
+	SELECT P.MaterialID_FK FROM ProvidedBy P
+    WHERE P.SupplierID_FK IN (
+		SELECT S.SupplierID FROM Supplier S
+        WHERE S.CityID_FK IN (
+			SELECT C.CityID FROM City C
+            WHERE C.Name LIKE '%Ramos mejia%'
+        )
+    )
+);
+/*
 #6) Listar los nombres de los proveedores que proveen materiales para 
 artículos ubicados en almacenes que Roberto tiene a su cargo
 */
+
+SELECT S.Name 
+FROM Supplier S 
+JOIN ProvidedBy P ON S.SupplierID = P.SupplierID_FK
+JOIN ComposedOf Com ON P.MaterialID_FK = Com.MaterialID_FK
+JOIN Contains C ON C.ArticleID_FK = Com.ArticleID_FK
+JOIN Warehouse W ON W.Number = C.Number_FK
+WHERE W.PersonInCharge LIKE '%Roberto%';
+
+
+
+SELECT S.Name FROM Supplier S
+WHERE EXISTS(
+	SELECT 1 FROM ProvidedBy P
+    WHERE S.SupplierID = P.SupplierID_FK
+    AND EXISTS(
+		SELECT 1 FROM ComposedOf Com
+        WHERE Com.MaterialID_FK = P.MaterialID_FK
+        AND EXISTS (
+			SELECT 1 FROM Contains C
+            WHERE C.ArticleID_FK  = Com.ArticleID_FK
+            AND EXISTS (
+				SELECT 1 FROM Warehouse W
+                WHERE W.Number = C.Number_FK
+                AND W.PersonInCharge LIKE '%rOBERTO%'
+            )
+        )
+    )
+);
+
+SELECT DISTINCT S.Name From Supplier S
+WHERE S.SupplierID IN (
+	SELECT P.SupplierID_FK FROM ProvidedBy P
+    WHERE P.MaterialID_FK IN(
+		SELECT Com.MaterialID_FK FROM ComposedOf Com
+        WHERE Com.ArticleID_FK IN (
+			SELECT C.ArticleID_FK FROM Contains C
+            WHERE C.Number_FK IN (
+				SELECT W.Number FROM Warehouse W
+                WHERE W.PersonInCharge LIKE '%ROBERto%'
+            )
+        )
+    )
+);
